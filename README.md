@@ -26,11 +26,15 @@ curl -fsSL https://raw.githubusercontent.com/avtomate/hush-puppy/master/uninstal
 
 ## How it works
 
-Uses Claude Code's [hooks system](https://docs.anthropic.com/en/docs/claude-code/hooks) to run a script when Claude stops responding. The script:
+Uses Claude Code's [hooks system](https://docs.anthropic.com/en/docs/claude-code/hooks) with 3 hooks working together:
 
-1. Reads the current working directory from the hook context
-2. Finds the parent terminal's TTY
-3. Sets the tab title using ANSI escape sequences
+| Hook | Action |
+|------|--------|
+| `UserPromptSubmit` | Clears title when you submit a prompt |
+| `PreToolUse` | Clears title when Claude uses tools (keeps it clear while working) |
+| `Stop` | Sets "🔴 INPUT NEEDED" when Claude finishes |
+
+This ensures the notification only appears when Claude is truly waiting for your input, not during tool execution or subagent work.
 
 ## Compatibility
 

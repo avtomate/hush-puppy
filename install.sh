@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-VERSION="1.0.0"
-SCRIPT_URL="https://raw.githubusercontent.com/avtomate/hush-puppy/master/scripts/notify-input.sh"
+VERSION="1.1.0"
+BASE_URL="https://raw.githubusercontent.com/avtomate/hush-puppy/master/scripts"
 SCRIPTS_DIR="$HOME/.claude/scripts"
 SETTINGS_FILE="$HOME/.claude/settings.json"
 
@@ -11,20 +11,17 @@ echo "🐕 Installing Hush Puppy v$VERSION..."
 # Create scripts directory
 mkdir -p "$SCRIPTS_DIR"
 
-# Download the notification script
-curl -fsSL "$SCRIPT_URL" -o "$SCRIPTS_DIR/notify-input.sh"
-chmod +x "$SCRIPTS_DIR/notify-input.sh"
+# Download scripts
+curl -fsSL "$BASE_URL/notify-input.sh" -o "$SCRIPTS_DIR/notify-input.sh"
+curl -fsSL "$BASE_URL/clear-title.sh" -o "$SCRIPTS_DIR/clear-title.sh"
+chmod +x "$SCRIPTS_DIR/notify-input.sh" "$SCRIPTS_DIR/clear-title.sh"
 
-# Add hooks to settings.json
+# Hook configuration with all 3 hooks
 HOOK_CONFIG='{
   "hooks": {
-    "Stop": [{
-      "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "~/.claude/scripts/notify-input.sh"
-      }]
-    }]
+    "UserPromptSubmit": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/clear-title.sh"}]}],
+    "PreToolUse": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/clear-title.sh"}]}],
+    "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/notify-input.sh"}]}]
   }
 }'
 
@@ -41,16 +38,18 @@ if [ -f "$SETTINGS_FILE" ]; then
     else
         # Simple merge without jq - add hooks if not present
         if grep -q '"hooks"' "$SETTINGS_FILE"; then
-            echo "⚠️  settings.json already has hooks. Please manually add the Stop hook."
+            echo "⚠️  settings.json already has hooks. Please manually merge the hooks."
             echo "   Backup saved to $SETTINGS_FILE.backup"
             echo ""
-            echo "Add this to your hooks:"
+            echo "Add these hooks to your settings.json:"
+            echo '    "UserPromptSubmit": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/clear-title.sh"}]}]'
+            echo '    "PreToolUse": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/clear-title.sh"}]}]'
             echo '    "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/notify-input.sh"}]}]'
         else
-            # Remove closing brace, add hooks, close brace (compatible with macOS and Linux)
+            # Remove closing brace, add hooks, close brace
             sed '$ d' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp"
             mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
-            echo '  ,"hooks": {"Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/notify-input.sh"}]}]}' >> "$SETTINGS_FILE"
+            echo '  ,"hooks": {"UserPromptSubmit": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/clear-title.sh"}]}], "PreToolUse": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/clear-title.sh"}]}], "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/notify-input.sh"}]}]}' >> "$SETTINGS_FILE"
             echo '}' >> "$SETTINGS_FILE"
         fi
     fi

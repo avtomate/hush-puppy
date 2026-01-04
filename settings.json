@@ -1,11 +1,16 @@
 {
   "hooks": {
+    "UserPromptSubmit": [{
+      "matcher": "",
+      "hooks": [{ "type": "command", "command": "~/.claude/scripts/clear-title.sh" }]
+    }],
+    "PreToolUse": [{
+      "matcher": "",
+      "hooks": [{ "type": "command", "command": "~/.claude/scripts/clear-title.sh" }]
+    }],
     "Stop": [{
       "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "~/.claude/scripts/notify-input.sh"
-      }]
+      "hooks": [{ "type": "command", "command": "~/.claude/scripts/notify-input.sh" }]
     }]
   }
 }
