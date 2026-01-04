@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+VERSION="1.0.0"
 SCRIPTS_DIR="$HOME/.claude/scripts"
 SETTINGS_FILE="$HOME/.claude/settings.json"
 

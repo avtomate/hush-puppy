@@ -1,11 +1,12 @@
 #!/bin/bash
 set -e
 
+VERSION="1.0.0"
 SCRIPT_URL="https://raw.githubusercontent.com/avtomate/hush-puppy/master/scripts/notify-input.sh"
 SCRIPTS_DIR="$HOME/.claude/scripts"
 SETTINGS_FILE="$HOME/.claude/settings.json"
 
-echo "🐕 Installing Hush Puppy..."
+echo "🐕 Installing Hush Puppy v$VERSION..."
 
 # Create scripts directory
 mkdir -p "$SCRIPTS_DIR"
@@ -33,8 +34,10 @@ if [ -f "$SETTINGS_FILE" ]; then
 
     if command -v jq &> /dev/null; then
         # Merge with jq
-        jq -s '.[0] * .[1]' "$SETTINGS_FILE" <(echo "$HOOK_CONFIG") > "$SETTINGS_FILE.tmp"
+        echo "$HOOK_CONFIG" > "$SETTINGS_FILE.hook"
+        jq -s '.[0] * .[1]' "$SETTINGS_FILE" "$SETTINGS_FILE.hook" > "$SETTINGS_FILE.tmp"
         mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
+        rm "$SETTINGS_FILE.hook"
     else
         # Simple merge without jq - add hooks if not present
         if grep -q '"hooks"' "$SETTINGS_FILE"; then
@@ -44,8 +47,9 @@ if [ -f "$SETTINGS_FILE" ]; then
             echo "Add this to your hooks:"
             echo '    "Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/notify-input.sh"}]}]'
         else
-            # Remove closing brace, add hooks, close brace
-            sed -i '$ d' "$SETTINGS_FILE"
+            # Remove closing brace, add hooks, close brace (compatible with macOS and Linux)
+            sed '$ d' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp"
+            mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
             echo '  ,"hooks": {"Stop": [{"matcher": "", "hooks": [{"type": "command", "command": "~/.claude/scripts/notify-input.sh"}]}]}' >> "$SETTINGS_FILE"
             echo '}' >> "$SETTINGS_FILE"
         fi
